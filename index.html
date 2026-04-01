@@ -1,11 +1,181 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Jogo Dev com Níveis</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            gap: 5px;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>fghdfghjmd</h1>
+
+    <h2>🤖 Jogo Dev - Níveis</h2>
+    <p id="nivel"></p>
+
+    <div id="grid"></div>
+
+    <textarea id="code" rows="6" cols="30">
+direita()
+direita()
+baixo()
+</textarea><br><br>
+
+    <button onclick="executar()">Executar</button>
+
+    <script>
+        let nivelAtual = 0;
+
+        let niveis = [
+            {
+                start: { x: 0, y: 0 },
+                chips: [{ x: 2, y: 0 }, { x: 2, y: 1 }]
+            },
+            {
+                start: { x: 0, y: 0 },
+                chips: [{ x: 1, y: 1 }, { x: 3, y: 2 }, { x: 4, y: 0 }]
+            }
+        ];
+
+        let robot;
+        let chips;
+
+        function iniciarNivel() {
+            let nivel = niveis[nivelAtual];
+            robot = { ...nivel.start };
+            chips = JSON.parse(JSON.stringify(nivel.chips));
+            document.getElementById("nivel").innerText = "Nível: " + (nivelAtual + 1);
+            desenhar();
+        }
+
+        function desenhar() {
+            const grid = document.getElementById("grid");
+            grid.innerHTML = "";
+
+            for (let y = 0; y < 5; y++) {
+                for (let x = 0; x < 5; x++) {
+                    let cell = document.createElement("div");
+                    cell.className = "cell";
+
+                    let temChip = chips.find(c => c.x === x && c.y === y);
+
+                    if (robot.x === x && robot.y === y) cell.innerHTML = "🤖";
+                    else if (temChip) cell.innerHTML = "💎";
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function coletar() {
+            chips = chips.filter(c => !(c.x === robot.x && c.y === robot.y));
+        }
+
+        function direita() { robot.x++; coletar(); }
+        function esquerda() { robot.x--; coletar(); }
+        function cima() { robot.y--; coletar(); }
+        function baixo() { robot.y++; coletar(); }
+
+        function executar() {
+            iniciarNivel();
+
+            let codigo = document.getElementById("code").value
+                .split("\n")
+                .map(l => l.trim())
+                .filter(l => l !== "");
+
+            let i = 0;
+
+            function passo() {
+                if (i >= codigo.length) {
+                    // terminou
+                    if (chips.length === 0) {
+                        setTimeout(() => {
+                            alert("🎉 Nível completo!");
+                            nivelAtual++;
+
+                            if (nivelAtual < niveis.length) {
+                                iniciarNivel();
+                            } else {
+                                alert("🏆 Você zerou!");
+                                nivelAtual = 0;
+                                iniciarNivel();
+                            }
+                        }, 300);
+                    } else {
+                        alert("❌ Faltam chips!");
+                    }
+                    return;
+                }
+
+                let linha = codigo[i];
+
+                if (linha === "direita()") direita();
+                if (linha === "esquerda()") esquerda();
+                if (linha === "cima()") cima();
+                if (linha === "baixo()") baixo();
+
+                desenhar();
+
+                i++;
+                setTimeout(passo, 400); // velocidade da animação
+            }
+
+            passo();
+        }
+
+        desenhar();
+
+        if (chips.length === 0) {
+            setTimeout(() => {
+                alert("🎉 Nível completo!");
+                nivelAtual++;
+
+                if (robot.x === x && robot.y === y) {
+                    cell.innerHTML = "🤖";
+                    cell.style.transform = "scale(1.2)";
+                }
+
+                if (nivelAtual < niveis.length) {
+                    iniciarNivel();
+                } else {
+                    alert("🏆 Você zerou o jogo!");
+                    nivelAtual = 0;
+                    iniciarNivel();
+                }
+            }, 200);
+        } else {
+            alert("❌ Ainda faltam chips!");
+        }
+
+
+
+
+        iniciarNivel();
+    </script>
+
 </body>
+
 </html>

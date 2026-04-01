@@ -13,8 +13,7 @@ const readline = require("readline");
 const root = process.cwd();
 const oldDirs = ["app", "components", "hooks", "constants", "scripts"];
 const exampleDir = "app-example";
-const newAppDir = "app";
-const exampleDirPath = path.join(root, exampleDir);
+
 
 const indexContent = `import { Text, View } from "react-native";
 
@@ -70,11 +69,6 @@ const moveDirectories = async (userInput) => {
       }
     }
 
-    // Create new /app directory
-    const newAppDirPath = path.join(root, newAppDir);
-    await fs.promises.mkdir(newAppDirPath, { recursive: true });
-    console.log("\n📁 New /app directory created.");
-
     // Create index.tsx
     const indexPath = path.join(newAppDirPath, "index.tsx");
     await fs.promises.writeFile(indexPath, indexContent);
@@ -98,15 +92,4 @@ const moveDirectories = async (userInput) => {
   }
 };
 
-rl.question(
-  "Do you want to move existing files to /app-example instead of deleting them? (Y/n): ",
-  (answer) => {
-    const userInput = answer.trim().toLowerCase() || "y";
-    if (userInput === "y" || userInput === "n") {
-      moveDirectories(userInput).finally(() => rl.close());
-    } else {
-      console.log("❌ Invalid input. Please enter 'Y' or 'N'.");
-      rl.close();
-    }
-  }
 );
