@@ -17,17 +17,18 @@ export default function GameScreen() {
   for (const linha of linhas) {
     const textoLimpo = linha.trim().toLowerCase();
     
-    // 1. REGEX MÁGICO: Procura algo como "nome(numero)"
-    // Ele separa o nome (ex: direita) e o número (ex: 5)
-    const match = textoLimpo.match(/(\w+)\((\d+)\)/);
+    // 1. REGEX ATUALIZADO: (\d*) agora aceita zero ou mais dígitos
+    const match = textoLimpo.match(/(\w+)\((\d*)\)/);
 
     if (match) {
-      const comando = match[1]; // "direita", "subir", etc.
-      const vezes = parseInt(match[2]); // Converte o "5" de texto para número
+      const comando = match[1];
+      
+      // 2. LÓGICA DE VALOR PADRÃO:
+      // Se match[2] estiver vazio, vira 1. Se tiver algo, vira o número digitado.
+      const vezes = match[2] === "" ? 1 : parseInt(match[2]);
 
-      // 2. LAÇO DE REPETIÇÃO INTERNO
       for (let i = 0; i < vezes; i++) {
-        await esperar(300); // Um pouco mais rápido para não demorar muito
+        await esperar(300);
 
         setPosicao((atual) => {
           if (comando === 'subir') return { ...atual, y: atual.y - passo };
@@ -38,8 +39,6 @@ export default function GameScreen() {
         });
       }
     } else {
-      // Caso o usuário digite sem número, ex: direita()
-      // Você pode tratar como 1 vez ou dar erro.
       setStatus(`Erro de sintaxe em: ${linha}`);
       break; 
     }
