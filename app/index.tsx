@@ -11,41 +11,49 @@ export default function GameScreen() {
   const esperar = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const executarCodigo = async () => {
-  const linhas = comandoTexto.split('\n').filter(l => l.trim() !== '');
-  setStatus('Executando programa...');
-
-  for (const linha of linhas) {
-    const textoLimpo = linha.trim().toLowerCase();
+    const linhas = comandoTexto.split('\n').filter(l => l.trim() !== '');
+    const querRepetir = comandoTexto.toLowerCase().includes('repetir()');
     
-    // 1. REGEX ATUALIZADO: (\d*) agora aceita zero ou mais dígitos
-    const match = textoLimpo.match(/(\w+)\((\d*)\)/);
+    setStatus('Executando programa...');
 
-    if (match) {
-      const comando = match[1];
-      
-      // 2. LÓGICA DE VALOR PADRÃO:
-      // Se match[2] estiver vazio, vira 1. Se tiver algo, vira o número digitado.
-      const vezes = match[2] === "" ? 1 : parseInt(match[2]);
+    // O loop 'do...while' garante que execute pelo menos uma vez
+    // e continue se houver 'repetir()' no texto
+    do {
+      for (const linha of linhas) {
+        const textoLimpo = linha.trim().toLowerCase();
+        
+        // 1. REGEX: Procura algo como "nome(numero)" ou "nome()"
+        const match = textoLimpo.match(/(\w+)\((\d*)\)/);
 
-      for (let i = 0; i < vezes; i++) {
-        await esperar(300);
+        if (match) {
+          const comando = match[1];
+          const vezes = match[2] === "" ? 1 : parseInt(match[2]);
 
-        setPosicao((atual) => {
-          if (comando === 'subir') return { ...atual, y: atual.y - passo };
-          if (comando === 'descer') return { ...atual, y: atual.y + passo };
-          if (comando === 'esquerda') return { ...atual, x: atual.x - passo };
-          if (comando === 'direita') return { ...atual, x: atual.x + passo };
-          return atual;
-        });
+          for (let i = 0; i < vezes; i++) {
+            await esperar(300);
+
+            setPosicao((atual) => {
+              if (comando === 'subir') return { ...atual, y: atual.y - passo };
+              if (comando === 'descer') return { ...atual, y: atual.y + passo };
+              if (comando === 'esquerda') return { ...atual, x: atual.x - passo };
+              if (comando === 'direita') return { ...atual, x: atual.x + passo };
+              return atual;
+            });
+          }
+        } else if (textoLimpo !== 'repetir()') {
+          setStatus(`Erro de sintaxe em: ${linha}`);
+          return; // Para tudo se houver erro
+        }
       }
-    } else {
-      setStatus(`Erro de sintaxe em: ${linha}`);
-      break; 
-    }
-  }
-  
-  setStatus('Missão cumprida!');
-};
+      
+      // Pequena pausa entre ciclos de repetição para não travar
+      if (querRepetir) await esperar(100);
+
+    } while (querRepetir);
+    
+    setComandoTexto(''); // Limpa o terminal ao finalizar
+    setStatus('Missão cumprida!');
+  };
 
   return (
     <View style={styles.container}>
@@ -62,7 +70,7 @@ export default function GameScreen() {
         <TextInput
           multiline
           style={styles.inputTerminal}
-          placeholder="Ex: direita() \n subir()"
+          placeholder="Ex: direita() / subir() / repetir() para criar um loop"
           placeholderTextColor="#555"
           value={comandoTexto}
           onChangeText={setComandoTexto}
